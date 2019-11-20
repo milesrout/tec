@@ -135,11 +135,11 @@ namespace tec {
 			else {
 				_mesh = m->CreateMesh();
 			}
-			ObjectGroup* objgroup = nullptr;
+			ObjectGroup* objgroup;
 			if (_mesh->object_groups.size() == 0) {
-				_mesh->object_groups.push_back(new ObjectGroup());
+				_mesh->object_groups.push_back(std::make_unique<ObjectGroup>());
 			}
-			objgroup = _mesh->object_groups[0];
+			objgroup = &*_mesh->object_groups[0];
 			while (this->changed_queue.size() > 0) {
 				std::int64_t index = this->changed_queue.front();
 				this->changed_queue.pop();
@@ -213,12 +213,13 @@ namespace tec {
 	}
 
 	std::weak_ptr<VoxelVolume> VoxelVolume::Create(eid entity_id, const std::string name) {
-		std::weak_ptr<MeshFile> mesh = MeshMap::Get(name);
-		if (!mesh.lock()) {
-			MeshMap::Set(name, std::make_shared<MeshFile>());
-			mesh = MeshMap::Get(name);
-			mesh.lock()->SetName(name);
-		}
+		std::weak_ptr<MeshFile> mesh;
+		//std::weak_ptr<MeshFile> mesh = MeshMap::Get(name);
+		//if (!mesh.lock()) {
+		//	MeshMap::Set(name, std::make_shared<MeshFile>());
+		//	mesh = MeshMap::Get(name);
+		//	mesh.lock()->SetName(name);
+		//}
 		return Create(entity_id, mesh);
 	}
 

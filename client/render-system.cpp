@@ -26,6 +26,8 @@
 #include "events.hpp"
 #include "multiton.hpp"
 
+// This file uses filesystem.hpp as a tool to convert resource names into disk file paths.
+
 namespace tec {
 	using PointLightMap = Multiton<eid, PointLight*>;
 	using DirectionalLightMap = Multiton<eid, DirectionalLight*>;

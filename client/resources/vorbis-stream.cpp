@@ -109,6 +109,9 @@ namespace tec {
 		}
 	}
 
+	// Uses a FilePath as both a resource name and a filesystem path
+	// Allows a third party library to do arbitrary I/O (passes it a filename derived from a FilePath)
+	// Uses a FilePath::toString() result as logging information.
 	std::shared_ptr<VorbisStream> VorbisStream::Create(const FilePath& filename) {
 		std::shared_ptr<VorbisStream> stream = std::make_shared<VorbisStream>();
 		//stream->SetFileName(fname);

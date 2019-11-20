@@ -11,6 +11,7 @@
 #include <google/protobuf/util/json_util.h>
 #include <game_state.pb.h>
 
+#include "vfs/vfs.hpp"
 #include "filesystem.hpp"
 #include "server.hpp"
 #include "client-connection.hpp"
@@ -21,9 +22,12 @@ using asio::ip::tcp;
 
 tec::state_id_t current_state_id = 0;
 
+// This file uses filesystem.hpp to load a particular known entity "assets/1000.json" from a location relative to a Trillek-specific assets directory.
+
 namespace tec {
 	eid active_entity;
 
+	// Load arbitrary resources in JSON format from arbitrary paths
 	std::string LoadJSON(const FilePath& fname) {
 		std::fstream input(fname.GetNativePath(), std::ios::in | std::ios::binary);
 		if (!input.good())
@@ -38,6 +42,7 @@ namespace tec {
 		return in;
 	}
 
+	// Load arbitrary resources in JSON-backed protobuf format from arbitrary paths
 	void ProtoLoadEntity(const FilePath& fname) {
 		std::shared_ptr<EntityCreated> data = std::make_shared<EntityCreated>();
 		std::string json_string = LoadJSON(fname);
@@ -55,6 +60,16 @@ int main() {
 	// Accumulated deltas since the last update was sent.
 	double delta_accumulator = 0.0;
 
+	///////////////////////////////////////////////
+
+	///// tec::virtual_file_system vfs;
+	///// vfs.mount("/assets", "./assets");
+	///// for (auto const& [mp, rp] : vfs.mounts) {
+	///// 	std::cout << mp._path << " ==> " << std::get<0>(rp) << std::endl;
+	///// }
+
+	///////////////////////////////////////////////
+
 	tec::GameStateQueue game_state_queue;
 	tec::Simulation simulation;
 
@@ -63,6 +78,7 @@ int main() {
 		tec::networking::Server server(endpoint);
 		std::cout << "Server ready" << std::endl;
 
+		// Load a specific entity from a path relative to a Trillek-specific assets directory
 		tec::ProtoLoadEntity(tec::FilePath::GetAssetPath("json/1000.json"));
 
 		last_time = std::chrono::high_resolution_clock::now();

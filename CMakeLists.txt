@@ -24,6 +24,7 @@ if (MSVC)
 	# The following turns off warnings in external libraries until the generator respects include_directories(SYSTEM ...) see https://devblogs.microsoft.com/cppblog/broken-warnings-theory/
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /experimental:external /external:anglebrackets /external:W0") 
 endif ()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftemplate-backtrace-limit=0") # MSVC 
 
 set(BUILD_STATIC_VCOMPUTER TRUE CACHE BOOL "Build Trillek VCOMPUTER library - static version")
 set(BUILD_DYNAMIC_VCOMPUTER FALSE CACHE BOOL "Build Trillek VCOMPUTER library - dynamic version")

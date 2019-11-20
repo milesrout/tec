@@ -24,6 +24,8 @@ set(trillek-common_LIBRARY "tec" CACHE STRING "Name of the library with code com
 
 set(trillek-common_SOURCES
 	${trillek-common_SOURCE_DIR}/filesystem.cpp
+	${trillek-common_SOURCE_DIR}/vfs/vfs.cpp
+	${trillek-common_SOURCE_DIR}/vfs/virtual_path.cpp
 	${trillek-common_SOURCE_DIR}/game-state-queue.cpp
 	${trillek-common_SOURCE_DIR}/lua-system.cpp
 	${trillek-common_SOURCE_DIR}/physics-system.cpp

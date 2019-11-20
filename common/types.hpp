@@ -118,6 +118,29 @@ namespace tec {
 #undef MAKE_IDTYPE_NAMESPACE
 #undef MAKE_IDTYPE
 
+	namespace util {
+	template <typename T>
+	struct reversed_wrapper {
+		T& iterable;
+	};
+
+	template <typename T>
+	auto begin(reversed_wrapper<T> r) {
+		using std::rbegin;
+		return rbegin(r.iterable);
+	}
+
+	template <typename T>
+	auto end(reversed_wrapper<T> r) {
+		using std::rend;
+		return rend(r.iterable);
+	}
+
+	template <typename T>
+	reversed_wrapper<T> reversed(T&& iterable) {
+		return {iterable};
+	}
+	}
 }
 
 #endif

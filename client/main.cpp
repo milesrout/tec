@@ -7,6 +7,13 @@
 #include <string>
 #include <thread>
 
+#include "vfs.hpp"
+using tec::VFS;
+
+#include "common/vfs/fs.hpp"
+#include "common/vfs/vfs.hpp"
+#include "resources/md5mesh.hpp"
+
 #include "server-connection.hpp"
 #include "server-message.hpp"
 #include "controllers/fps-controller.hpp"
@@ -37,9 +44,10 @@ namespace tec {
 	eid active_entity;
 }
 
+// This file uses filesystem.hpp purely to get a settings directory path for logging purposes
+
 int main(int argc, char* argv[]) {
 	auto loglevel = spdlog::level::info;
-
 
 	tec::InitializeComponents();
 	tec::InitializeFileFactories();
@@ -82,6 +90,71 @@ int main(int argc, char* argv[]) {
 	tec::GameStateQueue game_state_queue;
 	tec::networking::ServerConnection connection;
 
+	VFS.register_extension<tec::MD5Mesh>(".md5mesh", [] (std::string, auto const&, std::iostream& stream, auto& mp_handle, auto next) {
+		std::cout << "Real .md5mesh handler" << std::endl;
+
+		try {
+			tec::MD5Mesh mesh("", stream);
+			mesh.CalculateVertexPositions();
+			mesh.CalculateVertexNormals();
+			mesh.UpdateIndexList();
+			mp_handle.mount(std::move(mesh));
+		} catch (std::exception& exc) {
+			// Need to pass the resource name to the handler too
+			//spdlog::get("console_log")->warn("[MD5Mesh] Error parsing file {}", std::string{real_path});
+			spdlog::get("console_log")->warn("[MD5Mesh] Error parsing file {}", exc.what());
+			return false;
+		}
+
+		std::cout << "Calling next .md5mesh handler" << std::endl;
+		if (next.has_value()) {
+			next.value()();
+		}
+
+		return true;
+	});
+
+	VFS.register_extension<tec::MD5Mesh>(".md5mesh", [] (std::string, tec::vfs::virtual_path const& mount_point, std::iostream&, auto&, auto next) {
+		std::cout << "DEBUG: Loaded a file at " << std::string{mount_point} << std::endl;
+
+		std::cout << "Calling next .md5mesh handler" << std::endl;
+		if (next.has_value()) {
+			next.value()();
+			return true;
+		}
+		
+		// Not designed to work without an existing loader - doesn't actually load anything!
+		return false;
+	});
+
+	// Test mounting a directory (will later test loading an archive)
+	VFS.mount("/",           tec::fs::path{"./assets"});
+	VFS.mount("/assets/",    tec::fs::path{"./assets"});
+	VFS.mount("/assets/",    tec::fs::path{"./assets"});
+
+	// Test loading a resource from a directory
+	auto meshv1 = VFS.load<tec::MD5Mesh>("/bob/bob");
+
+	// // Test mounting a directory that doesn't exist
+	// VFS.mount("/logs/",      tec::fs::path{"./logs"}, tec::vfs::virtual_file_system::create_if_not_exists);
+
+	// // Test creating a resource in a directory
+	// auto logfile = VFS.load<tec::LogFile>("/logs/network"/*, create_if_not_exists */);
+
+	// // Test mounting a file as a file
+	// VFS.mount("/models/bob", tec::fs::path{"./assets/bob/bob.md5mesh"});
+
+	// // Test loading a file that's already been loaded at a new location
+	// auto meshv2 = VFS.load<tec::MD5Mesh>("/models/bob");
+
+	// // Test creating a memory-backed directory
+	// VFS.create_ramdisk("/tmp");
+
+	// // Test creating a file in a temporary directory
+	// auto tmpfile = VFS.load<tec::TextFile>("/tmp/tmp.ABCDE");
+
+	//return 0;
+
 	console.AddConsoleCommand(
 		"msg",
 		"msg : Send a message to all clients.",
@@ -111,6 +184,7 @@ int main(int argc, char* argv[]) {
 			}
 		});
 
+	// Get a settings directory path for logging purposes
 	log->info(std::string("Loading assets from: ") + tec::FilePath::GetAssetsBasePath().toString());
 
 	log->info("Initializing GUI system...");

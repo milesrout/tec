@@ -60,21 +60,7 @@ namespace tec {
 			std::vector<Weight> weights;
 		};
 
-		/**
-		 * \brief Returns a resource with the specified name.
-		 *
-		 * The only used initialization property is "filename".
-		 * \param[in] const std::vector<Property>& properties The creation properties for the resource.
-		 * \return std::shared_ptr<MD5Mesh> The created MD5Mesh resource.
-		 */
-		static std::shared_ptr<MD5Mesh> Create(const FilePath& fname);
-
-		/**
-		 * \brief Loads the MD5Mesh file from disk and parses it.
-		 *
-		 * \return bool If the mesh was valid and loaded correctly.
-		 */
-		bool Parse();
+		MD5Mesh(std::string name, std::istream& is);
 
 		/**
 		 * \brief Calculates the final vertex positions based on the bind-pose skeleton.
@@ -103,22 +89,10 @@ namespace tec {
 		 */
 		void UpdateIndexList();
 
-		/**
-		 * \brief Sets the mesh filename.
-		 *
-		 * This is just a shorthand function that can be called directly via script API.
-		 * \param[in] const std::string& fname The mesh filename.
-		 * \return bool True if initialization finished with no errors.
-		 */
-		void SetFileName(const FilePath& fname) {
-			this->path = fname;
-		}
-
 		// Used for MD5Anim::CheckMesh().
 		friend class MD5Anim;
 	private:
 		std::vector<InternalMesh> meshes_internal;
-		FilePath path; // Path to MD5Mesh file
 		std::vector<Joint> joints;
 	};
 }

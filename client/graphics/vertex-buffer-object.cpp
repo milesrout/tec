@@ -64,7 +64,7 @@ namespace tec {
 				Mesh* mfmesh = mesh->GetMesh(i);
 				vert_offset = static_cast<GLuint>(all_verts.size());
 				all_verts.insert(all_verts.end(), mfmesh->verts.begin(), mfmesh->verts.end());
-				for (ObjectGroup* objgroup : mfmesh->object_groups) {
+				for (auto const& objgroup : mfmesh->object_groups) {
 					for (auto mat_group : objgroup->material_groups) {
 						VertexGroup group;
 						group.index_count = mat_group.count;

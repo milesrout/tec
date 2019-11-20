@@ -14,7 +14,7 @@
 
 namespace tec {
 	class MeshFile;
-	typedef Multiton<std::string, std::shared_ptr<MeshFile>> MeshMap;
+	//typedef Multiton<std::string, std::shared_ptr<MeshFile>> MeshMap;
 
 	// Vertex data used for rendering or other purposes.
 	struct VertexData {
@@ -42,35 +42,27 @@ namespace tec {
 	};
 
 	struct Mesh final {
-		~Mesh() {
-			for (ObjectGroup* object : this->object_groups) {
-				if (object) {
-					delete object;
-				}
-			}
-		}
 		std::vector<VertexData> verts;
-		std::vector<ObjectGroup*> object_groups;
+		std::vector<std::unique_ptr<ObjectGroup>> object_groups;
 	};
 
 	class MeshFile {
 	public:
-		virtual ~MeshFile() {
-			for (Mesh* mesh : this->meshes) {
-				if (mesh) {
-					delete mesh;
-				}
-			}
-		}
+		MeshFile() = default;
+		virtual ~MeshFile() = default;
+		MeshFile(MeshFile const&) = delete;
+		MeshFile(MeshFile&&) = default;
+		MeshFile& operator=(MeshFile const&) = delete;
+		MeshFile& operator=(MeshFile&&) = default;
 
-		/**
-		 * \brief Creates a new mesh and adds it to this file.
-		 *
-		 * \return Mesh* The mesh that was added to this file.
+		/* It's safe to return a raw pointer, as long the person using the raw
+		 * pointer remembers that it isn't allowed to live longer than the
+		 * MeshFile itself, and that it is invalidated if any additional meshes
+		 * are added to the MeshFile.
 		 */
 		Mesh* CreateMesh() {
-			this->meshes.push_back(new Mesh());
-			return *(this->meshes.end() - 1);
+			this->meshes.push_back(std::make_unique<Mesh>());
+			return &**(this->meshes.end() - 1);
 		}
 
 		/**
@@ -79,19 +71,16 @@ namespace tec {
 		 * \param[in] Mesh* mesh The mesh to add to this file.
 		 * \return void
 		 */
-		void AddMesh(Mesh* mesh) {
-			this->meshes.push_back(mesh);
+		void AddMesh(std::unique_ptr<Mesh> mesh) {
+			this->meshes.push_back(std::move(mesh));
 		}
 
-		/**
-		 * \brief Returns a specific mesh.
-		 *
-		 * \param[in] const unsigned size_t index The index of the mesh to retrieve.
-		 * \return std::weak_ptr<MeshGroup> The requested mesh or null if the index is invalid.
+		/* The returned pointer is invalidated if the MeshFile is destroyed or
+		 * if any meshes are added to the MeshFile.
 		 */
 		Mesh* GetMesh(const std::size_t index) {
 			if (index < this->meshes.size()) {
-				return this->meshes.at(index);
+				return &*this->meshes.at(index);
 			}
 
 			return nullptr;
@@ -125,7 +114,7 @@ namespace tec {
 			this->dirty = false;
 		}
 	protected:
-		std::vector<Mesh*> meshes;
+		std::vector<std::unique_ptr<Mesh>> meshes;
 		std::string name{ "test" };
 		bool dirty{ false };
 	};

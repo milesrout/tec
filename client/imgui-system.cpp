@@ -18,6 +18,9 @@
 #include "server-connection.hpp"
 #include "gui/console.hpp"
 
+// This file uses filesystem.hpp to get the filenames of Trillek-specific log and ini files.
+// ImGui then does its own I/O using these filenames. (Yuck!)
+
 namespace tec {
 	GLFWwindow* IMGUISystem::window = nullptr;
 	int IMGUISystem::shader_program = 0, IMGUISystem::vertex_shader = 0, IMGUISystem::fragment_shader = 0;

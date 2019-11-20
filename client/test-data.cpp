@@ -10,6 +10,8 @@
 #include <google/protobuf/util/json_util.h>
 #include <components.pb.h>
 
+#include "common/vfs/vfs.hpp"
+
 #include "components/transforms.hpp"
 #include "components/collision-body.hpp"
 #include "components/lua-script.hpp"
@@ -30,12 +32,15 @@
 
 #include "entity.hpp"
 #include "types.hpp"
+#include "vfs.hpp"
 
 #include "sound-system.hpp"
 #include "vcomputer-system.hpp"
 #include "physics-system.hpp"
 #include "voxel-volume.hpp"
 #include "lua-system.hpp"
+
+// This file's use of filesystem.hpp doesn't matter in the long term.
 
 namespace tec {
 	std::map<tid, std::function<void(const proto::Entity&, const proto::Component&)>> in_functors;
@@ -79,7 +84,7 @@ namespace tec {
 	}
 
 	void InitializeFileFactories() {
-		AddFileFactory<MD5Mesh>();
+		//AddFileFactory<MD5Mesh>();
 		AddFileFactory<OBJ>();
 		AddFileFactory<VorbisStream>();
 		AddFileFactory<ScriptFile>();
@@ -127,8 +132,8 @@ namespace tec {
 
 		{
 			Entity bob(99);
-			std::shared_ptr<MD5Mesh> mesh1 = MD5Mesh::Create(FilePath::GetAssetPath("bob/bob.md5mesh"));
-			std::shared_ptr<MD5Anim> anim1 = MD5Anim::Create(FilePath::GetAssetPath("bob/bob.md5anim"), mesh1);
+			std::shared_ptr<MD5Mesh> mesh1 = VFS.load<MD5Mesh>("/bob/bob");//MD5Mesh::Create(FilePath::GetAssetPath("bob/bob.md5mesh"));
+			std::shared_ptr<MD5Anim> anim1 = MD5Anim::Create(FilePath::GetAssetPath("/bob/bob.md5anim"), mesh1);
 			Multiton<eid, Animation*>::Set(99, new Animation(anim1));
 			//std::shared_ptr<ScriptFile> script1 = ScriptFile::Create("Script1", FilePath::GetAssetPath("scripts/test.lua"));
 			//bob.Add<LuaScript>(script1);
@@ -136,6 +141,7 @@ namespace tec {
 
 		auto voxvol = VoxelVolume::Create(1000, "bob");
 		auto voxvol_shared = voxvol.lock();
+		//auto pixbuf = VFS.load<PixelBuffer>("/metal_wall");
 		auto pixbuf = PixelBuffer::Create("metal_wall", FilePath::GetAssetPath("metal_wall.png"));
 		auto tex = std::make_shared<TextureObject>(pixbuf);
 		TextureMap::Set("metal_wall", tex);

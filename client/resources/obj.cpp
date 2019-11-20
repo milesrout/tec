@@ -118,7 +118,7 @@ namespace tec {
 		if (obj->Parse()) {
 			obj->PopulateMeshGroups();
 
-			MeshMap::Set(obj->GetName(), obj);
+			//MeshMap::Set(obj->GetName(), obj);
 
 			return obj;
 		}
@@ -311,11 +311,13 @@ namespace tec {
 
 		for (std::size_t i = 0; i < this->vertexGroups.size(); ++i) {
 			const OBJ::OBJGroup* vert_group = this->vertexGroups[i].get();
-			Mesh* mesh = this->MeshFile::meshes[i];
+			Mesh* mesh = &*this->MeshFile::meshes[i];
 			if (this->MeshFile::meshes[i]->object_groups.size() == 0) {
-				this->MeshFile::meshes[i]->object_groups.push_back(new ObjectGroup());
+				this->MeshFile::meshes[i]->object_groups.push_back(std::make_unique<ObjectGroup>());
 			}
-			ObjectGroup* objgroup = this->MeshFile::meshes[i]->object_groups[0];
+
+			// This is safe as long as we don't store the pointer anywhere.
+			ObjectGroup* objgroup = &*this->MeshFile::meshes[i]->object_groups[0];
 
 			for (const OBJ::OBJGroup::FaceGroup* face_group : vert_group->face_groups) {
 				if (objgroup->material_groups.size() == 0) {

@@ -12,6 +12,7 @@
 #include <spdlog/spdlog.h>
 
 #include "graphics/texture-object.hpp"
+#include "vfs.hpp"
 
 namespace tec {
 	/**
@@ -127,38 +128,7 @@ namespace tec {
 		return w;
 	}
 
-	std::shared_ptr<MD5Mesh> MD5Mesh::Create(const FilePath& fname) {
-		auto mesh = std::make_shared<MD5Mesh>();
-		mesh->SetFileName(fname);
-		mesh->SetName(fname.SubpathFrom("assets").toGenericString());
-
-		if (mesh->Parse()) {
-			mesh->CalculateVertexPositions();
-			mesh->CalculateVertexNormals();
-			mesh->UpdateIndexList();
-			MeshMap::Set(mesh->GetName(), mesh);
-			return mesh;
-		}
-		spdlog::get("console_log")->warn("[MD5Mesh] Error parsing file {}", fname.toString());
-
-		return nullptr;
-	}
-
-	bool MD5Mesh::Parse() {
-		auto _log = spdlog::get("console_log");
-		if (!this->path.isValidPath() || ! this->path.FileExists()) {
-			_log->error("[MD5Mesh] Can't open the file {}. Invalid path or missing file.", path.toString());
-			// Can't open the file!
-			return false;
-		}
-		auto base_path = this->path.BasePath();
-		
-		std::ifstream f(this->path.GetNativePath(), std::ios::in);
-		if (!f.is_open()) {
-			_log->error("[MD5Mesh] Error opening file {}", path.toString());
-			return false;
-		}
-
+	MD5Mesh::MD5Mesh(std::string name, std::istream& f) {
 		std::string line;
 		while (std::getline(f, line)) {
 			std::stringstream ss(line);
@@ -170,7 +140,7 @@ namespace tec {
 				ss >> version;
 
 				if (version != 10) {
-					return false;
+					throw std::runtime_error{"Wrong version"};
 				}
 			}
 			else if (identifier == "numJoints") {
@@ -209,8 +179,9 @@ namespace tec {
 
 					if (identifier == "shader") {
 						ss >> mesh.shader;
-						auto filename = base_path / mesh.shader;
 						if (!TextureMap::Has(mesh.shader)) {
+							//auto pixbuf = VFS.load<PixelBuffer>(shader_name);
+							auto filename = "./assets/bob/" + mesh.shader;
 							auto pixbuf = PixelBuffer::Create(mesh.shader, filename);
 							auto tex = std::make_shared<TextureObject>(pixbuf);
 							TextureMap::Set(mesh.shader, tex);
@@ -249,8 +220,6 @@ namespace tec {
 				}
 			}
 		}
-
-		return true;
 	}
 
 	void MD5Mesh::CalculateVertexPositions() {
@@ -262,7 +231,7 @@ namespace tec {
 		}
 
 		for (std::size_t i = 0; i < this->meshes_internal.size(); ++i) {
-			Mesh* mesh = this->meshes[i];
+			Mesh* mesh = &*this->meshes[i];
 			InternalMesh& int_mesh = this->meshes_internal[i];
 			if (mesh->verts.size() < int_mesh.verts.size()) {
 				mesh->verts.resize(int_mesh.verts.size());
@@ -303,7 +272,7 @@ namespace tec {
 		}
 
 		for (std::size_t i = 0; i < this->meshes_internal.size(); ++i) {
-			Mesh* mesh = this->meshes[i];
+			Mesh* mesh = &*this->meshes[i];
 			InternalMesh& int_mesh = this->meshes_internal[i];
 			if (mesh->verts.size() < int_mesh.verts.size()) {
 				mesh->verts.resize(int_mesh.verts.size());
@@ -354,9 +323,11 @@ namespace tec {
 		for (std::size_t i = 0; i < this->meshes_internal.size(); ++i) {
 			const InternalMesh& int_mesh = this->meshes_internal[i];
 			if (this->meshes[i]->object_groups.size() == 0) {
-				this->meshes[i]->object_groups.push_back(new ObjectGroup());
+				this->meshes[i]->object_groups.push_back(std::make_unique<ObjectGroup>());
 			}
-			ObjectGroup* objgroup = this->meshes[i]->object_groups[0];
+
+			// This is safe as long as we don't store this pointer anywhere.
+			ObjectGroup* objgroup = &*this->meshes[i]->object_groups[0];
 			std::string material_name = int_mesh.shader;
 			material_name = material_name.substr(
 				material_name.find_last_of("/") + 1,

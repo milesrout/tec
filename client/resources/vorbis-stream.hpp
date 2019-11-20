@@ -52,6 +52,7 @@ namespace tec {
 
 		void Reset();
 
+		// Use a FilePath as the location of a vorbis file on disk
 		/**
 		 * \brief Creates a VorbisStream resource from the given filename.
 		 *

@@ -14,6 +14,10 @@
 
 #include "multiton.hpp"
 #include "filesystem.hpp"
+// This file uses filesystem.hpp FilePaths as the names of resources which it
+// assumes are the same as their locations on disk. It does not load paths
+// relative to a well-known directory, instead passing the result of
+// GetNativePath to fstream's constructor directly.
 
 namespace tec {
 	class ScriptFile;
@@ -23,6 +27,7 @@ namespace tec {
 	public:
 		ScriptFile() = default;
 
+		// Use a FilePath as the name of a resource (synonymous with its location on disk)
 		/**
 		 * \brief Returns a resource with the specified name.
 		 *
@@ -42,6 +47,7 @@ namespace tec {
 			return nullptr;
 		}
 
+		// Use a FilePath as the name of a resource (synonymous with its location on disk)
 		/**
 		 * \brief Returns a resource with the specified name.
 		 *
@@ -74,6 +80,7 @@ namespace tec {
 			return true;
 		}
 
+		// Use a FilePath as a real filesystem path to a script.
 		/**
 		 * \brief Factory method that creates a Script and stores it in the
 		 * ScriptMap under name. It will optionally load a script file with the given filename.
